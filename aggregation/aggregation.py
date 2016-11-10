@@ -44,9 +44,9 @@ def parse_data(reader):
             arrival_time = datetime.strptime(line[2], "%m/%d/%Y %H:%M")
 
         departures_by_station[departure_station][
-            (datetime(departure_time.year, departure_time.month, departure_time.day, departure_time.hour))] += 1
+            (datetime(departure_time.year, departure_time.month, departure_time.day))] += 1
         arrivals_by_station[arrival_station][
-            (datetime(arrival_time.year, arrival_time.month, arrival_time.day, arrival_time.hour))] += 1
+            (datetime(arrival_time.year, arrival_time.month, arrival_time.day))] += 1
 
     return departures_by_station, arrivals_by_station
 
@@ -61,7 +61,7 @@ def combine_data(stations, tables):
             except:
                 continue
         sorted_station_data = sorted(station_data)
-        idx = pd.date_range(sorted_station_data[0], sorted_station_data[-1], freq="H")
+        idx = pd.date_range(sorted_station_data[0], sorted_station_data[-1], freq="D")
         s = pd.Series(station_data)
         s = s.reindex(idx, fill_value=0)
         filled_series[station] = s
