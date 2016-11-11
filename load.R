@@ -18,7 +18,7 @@ load_all <- function(data_dir = "data"){
                 res <- read.csv(file, header = FALSE, stringsAsFactors = FALSE)
                 t <- regmatches(file, regexpr("arrivals|departures", file))
                 res$type <- as.factor(rep(t, nrow(res)))
-                res$station <- rep(gsub("([a-zA-Z/]*)([0-9]+)(.*)","\\2", data_files[2]), nrow(res))
+                res$station <- rep(gsub("([a-zA-Z/]*)([0-9]+)(.*)","\\2", file), nrow(res))
                 colnames(res) <- c("time", "count", "type", "station")
                 res$time <- strptime(res$time, "%Y-%m-%d")
                 return(res)
