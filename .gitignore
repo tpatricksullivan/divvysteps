@@ -33,3 +33,5 @@ vignettes/*.pdf
 *.knit.md
 .idea
 *.iml
+*.DS_Store
+*.ipynb_checkpoints/
