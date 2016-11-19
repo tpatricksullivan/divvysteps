@@ -38,4 +38,5 @@ vignettes/*.pdf
 *.knit.md
 .idea
 *.iml
-.Rproj.user
+*.DS_Store
+*.ipynb_checkpoints/
