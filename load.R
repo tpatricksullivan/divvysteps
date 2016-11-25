@@ -20,7 +20,7 @@ load_all <- function(data_dir = "data"){
                 res$type <- as.factor(rep(t, nrow(res)))
                 res$station <- rep(gsub("([a-zA-Z/]*)([0-9]+)(.*)","\\2", file), nrow(res))
                 colnames(res) <- c("time", "count", "type", "station")
-                res$time <- strptime(res$time, "%Y-%m-%d")
+                res$time <- as.POSIXct(strptime(res$time, "%Y-%m-%d"))
                 return(res)
         }
         df  <-  do.call(rbind, lapply(data_files, f))
