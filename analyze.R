@@ -140,74 +140,96 @@ pacf(reg.arma.fixed.cv[[297]]$mdl$residuals, lag = 180,
 tbats.mdl <- tbats_single(y, h = 7)
 tbats.mdl.cv <- cross_validate(y, w, tbats_single, h = 7)
 tbats.rmses <- sapply(tbats.mdl.cv, function(x){x$rmse})
+hist(tbats.rmses, main = "Histogram of RMSE", xlab = 'RMSE')
 
-arma.labels <- c('AR parameter',
-                 'MA parameter',
-                 'Degree of differences')
-arma.ix <- c(1,2)
-par(mfrow= c(1,2))
-
-for (i in arma.ix){
-    hist( sapply(reg.arma.cv, function(x){x$mdl$arma[i]}), 
-          main = arma.labels[i],
-          xlab = arma.labels[i])    
-}
+table( sapply(tbats.mdl.cv, function(x){x$mdl[['p']]}))
+table( sapply(tbats.mdl.cv, function(x){x$mdl[['q']]}))
 par(mfrow = c(1,1))
-reg.arma.mean.rmse <- mean(reg.arma.rmses)
-hist( reg.arma.rmses, 
-      main = sprintf('RMSE: 7 days ahead\nAverage: %f',reg.arma.mean.rmse),
-      xlab = 'RMSE')    
+hist(sapply(tbats.mdl.cv, function(x){
+    if (is.null(x$mdl$damping.parameter))
+        1
+    else
+        x$mdl$damping.parameter} ),
+    xlab = 'Damping parameter',
+    main = 'Histogram of damping parameter'
+)
 
+par(mfrow = c(1,2))
+hist(sapply(tbats.mdl.cv, function(x){x$mdl$k.vector[1]}),
+     main = '# of Fourier terms\nfor weekly seasonality',
+     xlab = '# of Fourier terms'
+)
+
+hist(sapply(tbats.mdl.cv, function(x){x$mdl$k.vector[2]}),
+     main = '# of Fourier terms\nfor annual seasonality',
+     xlab = '# of Fourier terms'
+)
 par(mfrow = c(1,1))
-reg.arma.fixed.cv <- cross_validate( y, w, regression.arma.fixed, 
-                                     h = 7, p = 3, d = 1, q = 3)
-reg.arma.fixed.total.rmse <- sqrt(mean(sapply(reg.arma.fixed.cv, function(x){x$rmse^2 * 7})) /7)
-hist( sapply(reg.arma.fixed.cv, function(x){x$rmse}), 
-      main = sprintf('RMSE: 7 days ahead\nAverage: %f', 
-                     reg.arma.fixed.total.rmse) ,
-      xlab = 'RMSE')    
 
 
-
-Box.test( reg.arma.fixed.cv[[297]]$mdl$residuals, type = 'Ljung-Box', lag = 365, fitdf = 7)
-par(mfrow = c(2,2))
-plot(reg.arma.fixed.cv[[297]]$mdl$residuals, 
+tbats.mdl <- tbats.mdl.cv[[297]]
+Box.test( residuals(tbats.mdl.cv[[297]]$mdl), type = 'Ljung-Box', lag = 365, fitdf = 7)
+par(mfrow = c(3,2))
+plot( residuals(tbats.mdl.cv[[297]]$mdl), 
      ylab = 'Residual', 
      main = 'Residuals: model 297')
-qqnorm(reg.arma.fixed.cv[[297]]$mdl$residuals, 
+qqnorm( residuals(tbats.mdl.cv[[297]]$mdl), 
        main = 'Histogram of residuals:\nmodel 297',
        xlab = 'Residual error')
-qqline(reg.arma.fixed.cv[[297]]$mdl$residuals, col = 'red')
-acf(reg.arma.fixed.cv[[297]]$mdl$residuals, lag = 180, 
+qqline(residuals(tbats.mdl.cv[[297]]$mdl), col = 'red')
+acf(residuals(tbats.mdl.cv[[297]]$mdl), lag = 180, 
     main = 'acf plot of residuals: model 297')
-pacf(reg.arma.fixed.cv[[297]]$mdl$residuals, lag = 180, 
+pacf(residuals(tbats.mdl.cv[[297]]$mdl), lag = 180, 
      main = 'pacf plot of residuals: model 297')
 
+acf(residuals(tbats.mdl.cv[[297]]$mdl)^2, lag = 180, 
+    main = 'acf plot of squared residuals: model 297')
+pacf(residuals(tbats.mdl.cv[[297]]$mdl)^2, lag = 180, 
+     main = 'pacf plot of squared residuals: model 297')
 
 
-
-
-ts.plot(tbats.mdl$actual, tbats.mdl$fcst$mean, gpars = list(col=c('blue','red')))
-plot(forecast(tbats.mdl$mdl, h = 180))
-plot(residuals(tbats.mdl$mdl))
-plot(tbats.components(tbats.mdl$mdl))
-Box.test(residuals(tbats.mdl$mdl), type = 'Ljung-Box', lag = 365, fitdf = 6)
-acf(residuals(tbats.mdl$mdl), lag = 180)
-pacf(residuals(tbats.mdl$mdl), lag = 180)
-ts.plot(data.frame(tbats.mdl$mdl$fitted.values, y[8:length(y)]), col = c("red", "blue"))
-tbats.mdl$rmse
-acf(residuals(tbats.mdl$mdl)^2, lag = 180)
-pacf(residuals(tbats.mdl$mdl)^2, lag = 180)
-hist(residuals(tbats.mdl$mdl))
+tbats.total.rmse <- sqrt(mean(sapply(tbats.mdl.cv, function(x){x$rmse^2 * 7})) /7)
+tbats.total.rmse
+##############
+# Long forecast
+############3
 
 tbats.mdl.long.fcst <- tbats_single(y,h = 180)
 tbats.mdl.long.fcst$rmse
-plot( tbats.mdl.long.fcst$fcst) 
+
+reg.arma.long.fcst <- regression.arma(y,w,h = 180)
+reg.arma.long.fcst$rmse
+
+
+par(mfrow = c(1,2))
+plot( tbats.mdl.long.fcst$fcst,
+      main = 'Forecast TBATS\nfor horizon 180 days',
+      col = 'blue',
+      fcol = 'green') 
+legend(x='topright', 
+       legend = sprintf("RMSE:%1.2f", tbats.mdl.long.fcst$rmse))
+plot(reg.arma.long.fcst$fcst,
+     main = 'Forecast\nRegression with ARMA\nfor horizon 180 days',
+     col = 'blue',
+     fcol = 'green') 
+legend(x='topright', 
+       legend = sprintf("RMSE:%1.2f", reg.arma.long.fcst$rmse))
 
 # Tbats with arch
-tbats.r <- residuals(tbats.mdl$mdl)
-McLeod.Li.test(y = tbats.r, gof.lag = 180)
+tbats.r <- residuals(tbats.mdl.cv[[297]]$mdl)
+McLeod.Li.test(y = tbats.r, gof.lag = 20, main = 'McLeod-Li p-values')
 
-
+?legend
 #########################
+plot(y, main = "Regression with ARMA:\n7-steps ahead forecast", 
+     col = 'blue')
 
+lapply(reg.arma.fixed.cv, function(x){lines(x$fcst$mean, col = 'green')});
+legend("topright", legend=c("Actual","Forecast"),
+       col = c('blue','green'),
+       lty = 'solid')
+plot(y, main = "TBATS:\n7-steps ahead forecast", col = 'blue')
+lapply(tbats.mdl.cv, function(x){lines(x$fcst$mean, col = 'green')})
+legend("topright", legend=c("Actual","Forecast"),
+       col = c('blue','green'),
+       lty = 'solid')
