@@ -14,11 +14,3 @@ load_weather <- function(file = './data/841451.csv',
                 filter( TMAX != -9999 & STATION_NAME == station)
         return(res)
 }
-
-<<<<<<< f612bb24bd1dc0be78ec46c6b7ae422a418dfa18
-# p <- ggplot(data = res, mapping = aes(x=DATE, y = TMAX)) 
-# p <- p + geom_line()
-# p <- p + facet_wrap(~STATION_NAME)
-# p
-=======
->>>>>>> weather loading change
